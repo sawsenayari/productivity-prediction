@@ -90,7 +90,12 @@ if model:
     try:
         coefs = model.named_steps['model'].coef_
         cat_features_encoded = model.named_steps['pre'].named_transformers_['cat'].named_steps['onehot'].get_feature_names_out(cat_feats)
-        feature_names = num_feats + list(ca
+        feature_names = num_feats + list(cat_features_encoded)
+        coef_df = pd.DataFrame({"Feature": feature_names, "Coefficient": coefs})
+        st.dataframe(coef_df)
+    except:
+        st.info("⚠️ Impossible d'extraire tous les coefficients pour les features catégorielles encodées.")
+
 
 
 
