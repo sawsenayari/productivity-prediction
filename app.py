@@ -1,7 +1,5 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
@@ -10,7 +8,7 @@ from sklearn.linear_model import LinearRegression
 
 st.set_page_config(page_title="Prédiction Productivité", page_icon="🧵", layout="wide")
 st.title("🚀 Prédiction de la productivité des équipes")
-st.markdown("Interface interactive pour prédire la productivité et visualiser les résultats.")
+st.markdown("Interface simple pour prédire la productivité réelle d'une équipe.")
 
 # Charger le modèle et les données
 @st.cache_data
@@ -19,7 +17,7 @@ def load_and_train():
         df = pd.read_csv("data.csv")
     except FileNotFoundError:
         st.error("⚠️ Fichier data.csv introuvable.")
-        return None, [], [], None, None
+        return None, [], [], None
     
     df = df.dropna(subset=['actual_productivity']).reset_index(drop=True)
     X = df.drop(columns=['actual_productivity', 'date'])
@@ -48,10 +46,9 @@ def load_and_train():
     ])
     
     model.fit(X, y)
-    y_pred = model.predict(X)
-    return model, numeric_features, categorical_features, y, y_pred
+    return model, numeric_features, categorical_features
 
-model, num_feats, cat_feats, y_true, y_pred = load_and_train()
+model, num_feats, cat_feats = load_and_train()
 
 # Sidebar pour toutes les features du CSV
 st.sidebar.header("Entrez les caractéristiques de l'équipe")
@@ -69,22 +66,4 @@ if model:
     if st.sidebar.button("Prédire"):
         X_new = pd.DataFrame([inputs])
         y_new_pred = model.predict(X_new)[0]
-        st.sidebar.success(f"✅ Productivité prédite : {y_new_pred:.2f}")
-
-        # Ajouter la nouvelle prédiction au graphique
-        st.session_state.setdefault('new_preds', []).append((inputs, y_new_pred))
-
-# Graphique Réel vs Prédit avec nouvelles prédictions
-if model:
-    st.subheader("📊 Réel vs Prédit")
-    fig, ax = plt.subplots()
-    ax.scatter(y_true, y_pred, label="Historique")
-    # Ajouter les nouvelles prédictions
-    if 'new_preds' in st.session_state:
-        for _, y_pred_new in st.session_state['new_preds']:
-            ax.scatter([y_pred_new], [y_pred_new], color='red', label="Nouvelle prédiction")
-    ax.plot([y_true.min(), y_true.max()], [y_true.min(), y_true.max()], 'r--')
-    ax.set_xlabel("Productivité réelle")
-    ax.set_ylabel("Productivité prédite")
-    ax.legend()
-    st.pyplot(fig)
+        st.success(f"✅ Productivité prédite : {y_new_pred:.2f}")
